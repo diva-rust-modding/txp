@@ -1,9 +1,10 @@
 use std::borrow::Cow;
 
 mod read;
+mod r#impl;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct TextureAtlas<'a>(Vec<Map<'a>>);
+pub struct TextureAtlas<'a>(pub Vec<Map<'a>>);
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Map<'a> {
