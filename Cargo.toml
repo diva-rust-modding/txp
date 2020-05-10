@@ -9,3 +9,8 @@ edition = "2018"
 [dependencies]
 nom = "5.1.1"
 nom_ext = { path = "/home/waelwindows/rust/nom_ext" }
+
+[dev-dependencies]
+structopt = "0.3.14"
+anyhow = "1.0.28"
+tabwriter = "1.2.1"
