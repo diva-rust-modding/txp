@@ -31,9 +31,10 @@ impl<'a> TextureArray<'a> {
     pub fn parse(i0: &'a [u8]) -> IResult<&'a [u8], TextureArray<'a>> { 
         use nom::multi::count;
         let (i, endian) = parse_magic(5)(i0)?;
-        let (i, mip_count) = u32_usize(endian)(i)?;
+        let (i, total_mip_count) = u32_usize(endian)(i)?;
         let (i, mipdata) = u32_usize(endian)(i)?;
-        let depth = (mipdata & 0xFF00) >> 2;
+        let depth = (mipdata & 0xFF00) >> 8;
+        let mip_count = total_mip_count / depth;
         let (_, sides) = count(offset_table(i0, SubTexture::parse, mip_count, endian), depth)(i)?;
         //let sides = sides.into_iter().map(|mipmaps| Side { mipmaps }).collect();
         Ok((i, Self { sides, name: None }))
