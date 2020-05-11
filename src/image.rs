@@ -40,7 +40,7 @@ impl<'a> SubTexture<'a> {
 
     pub fn to_luma_alpha(&self) -> Option<ImageBuffer<LumaA<u8>, &[u8]>> {
         match self.format {
-            L8 => ImageBuffer::from_raw(self.width, self.height, &self.data),
+            L8A8 => ImageBuffer::from_raw(self.width, self.height, &self.data),
             _ => None,
         }
     }
