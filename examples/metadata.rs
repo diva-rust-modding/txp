@@ -26,17 +26,17 @@ fn main() -> Result<()> {
     let mut data = vec![];
     file.read_to_end(&mut data)?;
     let (_, atlas) = TextureAtlas::parse(&data).unwrap();
-    for map in atlas.0 {
+    for (i, map) in atlas.0.iter().enumerate() {
         match map {
             Map::Texture(t) => {
-                println!("Texture w/ {} mip(s)", t.mipmaps.len());
-                print_mips(&t.mipmaps);
+                println!("Texture #{} w/ {} mip(s)", i+1, t.mipmaps.len());
+                print_mips(&t.mipmaps, "");
             }
             Map::Array(t) => {
-                println!("Texture Array w/ {} side(s)", t.sides.len());
+                println!("Texture Array #{} w/ {} side(s)", i+1, t.sides.len());
                 for (i, side) in t.sides.iter().enumerate() {
-                    println!("Side {} has {} mip(s)", i+1, side.len());
-                    print_mips(&side);
+                    println!("    Side {} has {} mip(s)", i+1, side.len());
+                    print_mips(&side, "\t");
                 }
             }
         }
@@ -44,11 +44,11 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn print_mips(mips: &[SubTexture<'_>]) -> Result<()> {
+fn print_mips(mips: &[SubTexture<'_>], tab: &str) -> Result<()> {
     let mut tw = TabWriter::new(vec![]);
     for (i, mip) in mips.iter().enumerate() {
         // println!("\t{}", mip);
-        write!(tw, "\t#{}\t{}x{}\t{:?}\n", i+1, mip.width, mip.height, mip.format)?;
+        write!(tw, "\t{}#{}\t{}x{}\t{:?}\n", tab, i+1,  mip.width, mip.height, mip.format)?;
     }
     println!("{}", String::from_utf8(tw.into_inner()?)?);
     Ok(())
