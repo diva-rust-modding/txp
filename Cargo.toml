@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 nom = "5.1.1"
 nom_ext = { path = "/home/waelwindows/rust/nom_ext" }
+image = { version = "0.23.4", optional = true }
 
 [dev-dependencies]
 structopt = "0.3.14"

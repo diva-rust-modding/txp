@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 
 mod read;
+#[cfg(feature="image")]
+mod image;
 mod r#impl;
 
 #[derive(Debug, PartialEq, Clone)]
