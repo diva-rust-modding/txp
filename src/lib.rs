@@ -2,7 +2,9 @@ use std::borrow::Cow;
 
 mod read;
 #[cfg(feature="image")]
-mod image;
+pub mod image;
+#[cfg(feature="ddsfile")]
+pub mod dds;
 mod r#impl;
 
 #[derive(Debug, PartialEq, Clone)]
