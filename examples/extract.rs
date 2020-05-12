@@ -17,9 +17,6 @@ struct Opt {
 use std::fs::File;
 use std::io::Read;
 
-use ::image::ImageDecoder;
-use ::image::DynamicImage;
-
 fn main() -> Result<()> {
     let opt = Opt::from_args();
     let mut file = File::open(&opt.input)?;
@@ -34,26 +31,35 @@ fn main() -> Result<()> {
             Map::Texture(t) => {
                 let name = format!("tex{}.{}", i, ext);
                 let path = path.join(name);
-                let mip = t.mipmaps[0].clone();
-                let image = match mip.to_dynamic_image() {
-                    Some(i) => i,
-                    None => continue
-                };
-                image.flipv().save(path);
+                if ext == "dds" {
+                    let mut save = File::create(path)?;
+                    let dds = t.to_dds()?;
+                    dds.write(&mut save)?;
+                } else {
+                    image_extract(t.mipmaps[0].clone(), path);
+                }
             }
             Map::Array(m) => {
                 for (j, side) in m.sides.iter().enumerate() {
                     let name = format!("tex{}_side{}.{}", i, j, ext);
                     let path = path.join(name);
-                    let mip = side[0].clone();
-                    let image = match mip.to_dynamic_image() {
-                        Some(i) => i,
-                        None => continue
-                    };
-                    image.flipv().save(path);
+                    if ext == "dds" {
+                        let mut save = File::create(path)?;
+                        let dds = side[0].to_dds()?;
+                        dds.write(&mut save)?;
+                    } else {
+                        image_extract(side[0].clone(), path);
+                    }
                 }
             }
         }
     }
     Ok(())
+}
+
+use std::path::Path;
+fn image_extract<Q: AsRef<Path>>(subtex: SubTexture<'_>, path: Q) -> Option<()> {
+    let image = subtex.to_dynamic_image()?;
+    image.flipv().save(path);
+    Some(())
 }
