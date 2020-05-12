@@ -10,6 +10,8 @@ struct Opt {
     /// Input file
     #[structopt(parse(from_os_str))]
     input: PathBuf,
+
+    ext: Option<String>,
 }
 
 use std::fs::File;
@@ -26,10 +28,11 @@ fn main() -> Result<()> {
     let (_, atlas) = TextureAtlas::parse(&data).unwrap();
     let path = opt.input.parent().unwrap().join(opt.input.file_stem().unwrap());
     std::fs::create_dir(&path);
+    let ext = opt.ext.unwrap_or("png".into());
     for (i, map) in atlas.0.into_iter().enumerate() {
         match map {
             Map::Texture(t) => {
-                let name = format!("tex{}.dds", i);
+                let name = format!("tex{}.{}", i, ext);
                 let path = path.join(name);
                 let mip = t.mipmaps[0].clone();
                 let image = match mip.to_dynamic_image() {
@@ -38,7 +41,18 @@ fn main() -> Result<()> {
                 };
                 image.flipv().save(path);
             }
-            _ => continue
+            Map::Array(m) => {
+                for (j, side) in m.sides.iter().enumerate() {
+                    let name = format!("tex{}_side{}.{}", i, j, ext);
+                    let path = path.join(name);
+                    let mip = side[0].clone();
+                    let image = match mip.to_dynamic_image() {
+                        Some(i) => i,
+                        None => continue
+                    };
+                    image.flipv().save(path);
+                }
+            }
         }
     }
     Ok(())
