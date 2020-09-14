@@ -36,7 +36,13 @@ fn main() -> Result<()> {
                     let dds = t.to_dds()?;
                     dds.write(&mut save)?;
                 } else {
-                    image_extract(t.mipmaps[0].clone(), path);
+                    if t.is_yuv() {
+                        let image = t.yuv_to_image()?;
+                        // image.flipv().save(path);
+                        image.save(path);
+                    } else {
+                        image_extract(t.mipmaps[0].clone(), path);
+                    }
                 }
             }
             Map::Array(m) => {

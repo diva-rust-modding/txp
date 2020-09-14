@@ -5,6 +5,10 @@ mod read;
 pub mod image;
 #[cfg(feature="ddsfile")]
 pub mod dds;
+#[cfg(feature="dcv-color-primitives")]
+pub mod yuv;
+#[cfg(feature="pyo3")]
+pub mod py_ffi;
 mod r#impl;
 
 #[derive(Debug, PartialEq, Clone)]

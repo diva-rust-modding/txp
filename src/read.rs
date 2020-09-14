@@ -74,7 +74,7 @@ impl<'a> SubTexture<'a> {
 }
 
 impl TextureFormat {
-    fn from_id(id: u32) -> Option<Self> {
+    pub(crate) fn from_id(id: u32) -> Option<Self> {
         use super::TextureFormat::*;
         match id {
             1 => Some(RGB),
