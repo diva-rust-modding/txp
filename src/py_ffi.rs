@@ -1,6 +1,5 @@
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
-use pyo3::PyObjectProtocol;
 
 use super::*;
 
@@ -40,15 +39,36 @@ pub struct PyMipmap {
 }
 
 #[pymethods]
-#[cfg(feature="image")]
+#[cfg(feature = "image")]
 impl PyMipmap {
     fn to_rgb(&self) -> Option<Vec<(u8, u8, u8)>> {
         let sub: SubTexture<'_> = self.clone().into();
-        sub.to_dynamic_image().map(|x| x.to_rgb().pixels().map(|x| (x.0[0], x.0[1], x.0[2])).collect())
+        sub.to_dynamic_image().map(|x| {
+            x.to_rgb()
+                .pixels()
+                .map(|x| (x.0[0], x.0[1], x.0[2]))
+                .collect()
+        })
     }
     fn to_rgba(&self) -> Option<Vec<(u8, u8, u8, u8)>> {
         let sub: SubTexture<'_> = self.clone().into();
-        sub.to_dynamic_image().map(|x| x.to_rgba().pixels().map(|x| (x.0[0], x.0[1], x.0[2], x.0[3])).collect())
+        sub.to_dynamic_image().map(|x| {
+            x.to_rgba()
+                .pixels()
+                .map(|x| (x.0[0], x.0[1], x.0[2], x.0[3]))
+                .collect()
+        })
+    }
+
+    fn __repr__(&self) -> PyResult<String> {
+        let format = TextureFormat::from_id(self.format as u32);
+        Ok(format!(
+            "PyMipMap: {:?} {}x{} ({} bytes)",
+            format,
+            self.width,
+            self.height,
+            self.data.len()
+        ))
     }
 }
 
@@ -62,7 +82,9 @@ impl<'a> From<TextureAtlas<'a>> for PyTextureAtlas {
 impl<'a> From<Map<'a>> for PyMap {
     fn from(map: Map<'a>) -> Self {
         match map {
-            Map::Texture(t) => Self { sides: vec![t.into()] },
+            Map::Texture(t) => Self {
+                sides: vec![t.into()],
+            },
             Map::Array(a) => a.into(),
         }
     }
@@ -70,7 +92,13 @@ impl<'a> From<Map<'a>> for PyMap {
 
 impl<'a> From<TextureArray<'a>> for PyMap {
     fn from(arr: TextureArray<'a>) -> Self {
-        let sides = arr.sides.into_iter().map(|mip| PyTexture { mipmaps: mip.into_iter().map(Into::into).collect() }).collect();
+        let sides = arr
+            .sides
+            .into_iter()
+            .map(|mip| PyTexture {
+                mipmaps: mip.into_iter().map(Into::into).collect(),
+            })
+            .collect();
         Self { sides }
     }
 }
@@ -82,50 +110,77 @@ impl<'a> From<Texture<'a>> for PyTexture {
 }
 impl<'a> From<SubTexture<'a>> for PyMipmap {
     fn from(sub: SubTexture<'a>) -> Self {
-        let SubTexture { id, width, height, format, data } = sub;
+        let SubTexture {
+            id,
+            width,
+            height,
+            format,
+            data,
+        } = sub;
         let format = format as u8;
         let data = data.into_owned();
-        Self { id, width, height, format, data }
+        Self {
+            id,
+            width,
+            height,
+            format,
+            data,
+        }
     }
 }
 impl<'a> From<PyMipmap> for SubTexture<'a> {
     fn from(mip: PyMipmap) -> Self {
-        let PyMipmap { id, width, height, format, data } = mip;
+        let PyMipmap {
+            id,
+            width,
+            height,
+            format,
+            data,
+        } = mip;
         //TODO: deal with the error variant properly
         let format = TextureFormat::from_id(format as u32).unwrap();
         let data = data.into();
-        Self { id, width, height, format, data }
+        Self {
+            id,
+            width,
+            height,
+            format,
+            data,
+        }
     }
 }
 
-#[pyproto]
-impl<'p> PyObjectProtocol<'p> for PyTextureAtlas {
-    fn __repr__(&'p self) -> PyResult<String> {
-        Ok(format!( "PyTextureAtlas: {} map(s)", self.maps.len()))
+#[pymethods]
+impl PyTextureAtlas {
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!("PyTextureAtlas: {} map(s)", self.maps.len()))
     }
 }
-#[pyproto]
-impl<'p> PyObjectProtocol<'p> for PyMap {
-    fn __repr__(&'p self) -> PyResult<String> {
-        Ok(format!( "PyMap: {} side(s)", self.sides.len()))
+
+#[pymethods]
+impl PyMap {
+    fn __repr__(&self) -> PyResult<String> {
+        Ok(format!("PyMap: {} side(s)", self.sides.len()))
     }
 }
-#[pyproto]
-impl<'p> PyObjectProtocol<'p> for PyTexture {
-    fn __repr__(&'p self) -> PyResult<String> {
+
+#[pymethods]
+impl PyTexture {
+    fn __repr__(&self) -> PyResult<String> {
         let mip = match self.mipmaps.get(0) {
-            Some(m) => format!( " {:?} {}x{}", TextureFormat::from_id(m.format as u32), m.width, m.height),
+            Some(m) => format!(
+                " {:?} {}x{}",
+                TextureFormat::from_id(m.format as u32),
+                m.width,
+                m.height
+            ),
             None => "".to_string(),
         };
-        Ok(format!( "PyTexture: {} mipmap(s){}", self.mipmaps.len(), mip))
-    }
-}
-
-#[pyproto]
-impl<'p> PyObjectProtocol<'p> for PyMipmap {
-    fn __repr__(&'p self) -> PyResult<String> {
-        let format = TextureFormat::from_id(self.format as u32);
-        Ok(format!( "PyMipMap: {:?} {}x{} ({} bytes)", format, self.width, self.height, self.data.len()))
+        Ok(format!(
+            "PyTexture: {} mipmap(s){}",
+            self.mipmaps.len(),
+            mip
+        ))
     }
 }
 
@@ -142,7 +197,7 @@ fn read(path: String) -> PyResult<PyTextureAtlas> {
 
 #[pymodule]
 fn txp(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
-    m.add_wrapped(wrap_pyfunction!(read))?;
+    m.add_wrapped(wrap_pyfunction!(self::read))?;
     m.add_class::<PyTextureAtlas>()?;
     m.add_class::<PyMap>()?;
     m.add_class::<PyTexture>()?;
