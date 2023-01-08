@@ -27,7 +27,7 @@ pub struct PyTexture {
 #[pyclass]
 #[derive(Debug, PartialEq, Clone)]
 pub struct PyMipmap {
-    id: usize,
+    id: u32,
     #[pyo3(get, set)]
     pub width: u32,
     #[pyo3(get, set)]

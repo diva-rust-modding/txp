@@ -1,15 +1,15 @@
 use std::borrow::Cow;
 
-mod read;
-#[cfg(feature="image")]
-pub mod image;
-#[cfg(feature="ddsfile")]
+#[cfg(feature = "ddsfile")]
 pub mod dds;
-#[cfg(feature="dcv-color-primitives")]
-pub mod yuv;
-#[cfg(feature="pyo3")]
-pub mod py_ffi;
+#[cfg(feature = "image")]
+pub mod image;
 mod r#impl;
+#[cfg(feature = "pyo3")]
+pub mod py_ffi;
+mod read;
+#[cfg(feature = "dcv-color-primitives")]
+pub mod yuv;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TextureAtlas<'a>(pub Vec<Map<'a>>);
@@ -35,7 +35,7 @@ pub struct TextureArray<'a> {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct SubTexture<'a> {
-    id: usize,
+    id: u32,
     pub width: u32,
     pub height: u32,
     pub format: TextureFormat,
