@@ -44,7 +44,7 @@ impl<'a> TextureArray<'a> {
         let depth = (mipdata & 0xFF00) >> 8;
         let mip_count = total_mip_count / depth;
         let (_, sides) = count(
-            offset_table(i0, SubTexture::parse, mip_count.try_into().unwrap(), endian),
+            offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian),
             depth as usize,
         )
         .parse(i)?;
@@ -59,7 +59,7 @@ impl<'a> Texture<'a> {
         let (i, mip_count) = u32(endian)(i)?;
         let (i, _) = u32(endian)(i)?;
         let (_, mipmaps) =
-            offset_table(i0, SubTexture::parse, mip_count.try_into().unwrap(), endian).parse(i)?;
+            offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian).parse(i)?;
         Ok((
             i,
             Self {
@@ -109,8 +109,8 @@ where
     }
 }
 
-impl<'a> SubTexture<'a> {
-    pub fn parse(i: &'a [u8]) -> IResult<&'a [u8], SubTexture<'a>> {
+impl<'a> Mipmap<'a> {
+    pub fn parse(i: &'a [u8]) -> IResult<&'a [u8], Mipmap<'a>> {
         let (i, endian) = parse_magic(2)(i)?;
         let (i, width) = u32(endian)(i)?;
         let (i, height) = u32(endian)(i)?;
@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn read_subtexture() {
         let input = &INPUT[MIP_OFF..];
-        let (_, mip) = SubTexture::parse(input).unwrap();
+        let (_, mip) = Mipmap::parse(input).unwrap();
         assert_eq!(mip.id, 0);
         assert_eq!(mip.width, 256);
         assert_eq!(mip.height, 8);

@@ -1,6 +1,6 @@
-use txp::*;
-use structopt::StructOpt;
 use anyhow::*;
+use structopt::StructOpt;
+use txp::*;
 
 use std::path::PathBuf;
 
@@ -23,7 +23,11 @@ fn main() -> Result<()> {
     let mut data = vec![];
     file.read_to_end(&mut data)?;
     let (_, atlas) = TextureAtlas::parse(&data).unwrap();
-    let path = opt.input.parent().unwrap().join(opt.input.file_stem().unwrap());
+    let path = opt
+        .input
+        .parent()
+        .unwrap()
+        .join(opt.input.file_stem().unwrap());
     std::fs::create_dir(&path);
     let ext = opt.ext.unwrap_or("png".into());
     for (i, map) in atlas.0.into_iter().enumerate() {
@@ -64,7 +68,7 @@ fn main() -> Result<()> {
 }
 
 use std::path::Path;
-fn image_extract<Q: AsRef<Path>>(subtex: SubTexture<'_>, path: Q) -> Option<()> {
+fn image_extract<Q: AsRef<Path>>(subtex: Mipmap<'_>, path: Q) -> Option<()> {
     let image = subtex.to_dynamic_image()?;
     image.flipv().save(path);
     Some(())

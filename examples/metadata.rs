@@ -1,6 +1,6 @@
-use txp::*;
-use structopt::StructOpt;
 use anyhow::*;
+use structopt::StructOpt;
+use txp::*;
 
 use std::path::PathBuf;
 
@@ -19,7 +19,6 @@ use std::io::Write;
 
 use tabwriter::TabWriter;
 
-
 fn main() -> Result<()> {
     let opt = Opt::from_args();
     let mut file = File::open(opt.input)?;
@@ -29,13 +28,13 @@ fn main() -> Result<()> {
     for (i, map) in atlas.0.iter().enumerate() {
         match map {
             Map::Texture(t) => {
-                println!("Texture #{} w/ {} mip(s)", i+1, t.mipmaps.len());
+                println!("Texture #{} w/ {} mip(s)", i + 1, t.mipmaps.len());
                 print_mips(&t.mipmaps, "");
             }
             Map::Array(t) => {
-                println!("Texture Array #{} w/ {} side(s)", i+1, t.sides.len());
+                println!("Texture Array #{} w/ {} side(s)", i + 1, t.sides.len());
                 for (i, side) in t.sides.iter().enumerate() {
-                    println!("    Side {} has {} mip(s)", i+1, side.len());
+                    println!("    Side {} has {} mip(s)", i + 1, side.len());
                     print_mips(&side, "\t");
                 }
             }
@@ -44,11 +43,19 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn print_mips(mips: &[SubTexture<'_>], tab: &str) -> Result<()> {
+fn print_mips(mips: &[Mipmap<'_>], tab: &str) -> Result<()> {
     let mut tw = TabWriter::new(vec![]);
     for (i, mip) in mips.iter().enumerate() {
         // println!("\t{}", mip);
-        write!(tw, "\t{}#{}\t{}x{}\t{:?}\n", tab, i+1,  mip.width, mip.height, mip.format)?;
+        write!(
+            tw,
+            "\t{}#{}\t{}x{}\t{:?}\n",
+            tab,
+            i + 1,
+            mip.width,
+            mip.height,
+            mip.format
+        )?;
     }
     println!("{}", String::from_utf8(tw.into_inner()?)?);
     Ok(())

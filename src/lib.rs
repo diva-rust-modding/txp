@@ -4,15 +4,15 @@ use std::borrow::Cow;
 use pyo3::prelude::*;
 
 #[cfg(feature = "ddsfile")]
-pub mod dds;
+mod dds;
 #[cfg(feature = "image")]
-pub mod image;
+mod image;
 mod r#impl;
 #[cfg(feature = "pyo3")]
 pub mod py_ffi;
 mod read;
 #[cfg(feature = "dcv-color-primitives")]
-pub mod yuv;
+mod yuv;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct TextureAtlas<'a>(pub Vec<Map<'a>>);
@@ -25,11 +25,11 @@ pub enum Map<'a> {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture<'a> {
-    pub mipmaps: Vec<SubTexture<'a>>,
+    pub mipmaps: Vec<Mipmap<'a>>,
     pub name: Option<Cow<'a, str>>,
 }
 
-type Sides<'a> = Vec<SubTexture<'a>>;
+type Sides<'a> = Vec<Mipmap<'a>>;
 #[derive(Debug, PartialEq, Clone)]
 pub struct TextureArray<'a> {
     pub sides: Vec<Sides<'a>>,
@@ -37,7 +37,7 @@ pub struct TextureArray<'a> {
 }
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct SubTexture<'a> {
+pub struct Mipmap<'a> {
     id: u32,
     pub width: u32,
     pub height: u32,

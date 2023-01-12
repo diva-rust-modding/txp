@@ -5,7 +5,7 @@ use super::*;
 
 use std::path::Path;
 
-impl<'a> SubTexture<'a> {
+impl<'a> Mipmap<'a> {
     pub fn to_dxt_decoder(&self) -> Option<Result<DxtDecoder<&[u8]>, ImageError>> {
         use TextureFormat::*;
         let format = match self.format {
@@ -45,13 +45,17 @@ impl<'a> SubTexture<'a> {
         }
     }
 
-    pub fn to_dynamic_image(self) ->  Option<DynamicImage> {
+    pub fn to_dynamic_image(self) -> Option<DynamicImage> {
         use TextureFormat::*;
         match self.format {
-            RGB => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned()).map(DynamicImage::ImageRgb8),
-            RGBA => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned()).map(DynamicImage::ImageRgba8),
-            L8 => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned()).map(DynamicImage::ImageLuma8),
-            L8A8 => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned()).map(DynamicImage::ImageLumaA8),
+            RGB => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned())
+                .map(DynamicImage::ImageRgb8),
+            RGBA => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned())
+                .map(DynamicImage::ImageRgba8),
+            L8 => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned())
+                .map(DynamicImage::ImageLuma8),
+            L8A8 => ImageBuffer::from_raw(self.width, self.height, self.data.into_owned())
+                .map(DynamicImage::ImageLumaA8),
             DXT1 | DXT1a | DXT3 | DXT5 => {
                 let dec = self.to_dxt_decoder()?.ok()?;
                 DynamicImage::from_decoder(dec).ok()

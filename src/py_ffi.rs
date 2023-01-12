@@ -43,7 +43,7 @@ pub struct PyMipmap {
 impl PyMipmap {
     #[cfg(feature = "image")]
     fn to_rgb(&self) -> Option<Vec<(u8, u8, u8)>> {
-        let sub: SubTexture<'_> = self.clone().into();
+        let sub: Mipmap<'_> = self.clone().into();
         sub.to_dynamic_image().map(|x| {
             x.to_rgb()
                 .pixels()
@@ -53,7 +53,7 @@ impl PyMipmap {
     }
     #[cfg(feature = "image")]
     fn to_rgba(&self) -> Option<Vec<(u8, u8, u8, u8)>> {
-        let sub: SubTexture<'_> = self.clone().into();
+        let sub: Mipmap<'_> = self.clone().into();
         sub.to_dynamic_image().map(|x| {
             x.to_rgba()
                 .pixels()
@@ -137,9 +137,9 @@ impl<'a> From<PyTexture> for Texture<'a> {
         }
     }
 }
-impl<'a> From<SubTexture<'a>> for PyMipmap {
-    fn from(sub: SubTexture<'a>) -> Self {
-        let SubTexture {
+impl<'a> From<Mipmap<'a>> for PyMipmap {
+    fn from(sub: Mipmap<'a>) -> Self {
+        let Mipmap {
             id,
             width,
             height,
@@ -156,7 +156,7 @@ impl<'a> From<SubTexture<'a>> for PyMipmap {
         }
     }
 }
-impl<'a> From<PyMipmap> for SubTexture<'a> {
+impl<'a> From<PyMipmap> for Mipmap<'a> {
     fn from(mip: PyMipmap) -> Self {
         let PyMipmap {
             id,
