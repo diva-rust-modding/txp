@@ -33,7 +33,7 @@ pub struct PyMipmap {
     #[pyo3(get, set)]
     pub height: u32,
     #[pyo3(get, set)]
-    pub format: u8,
+    pub format: TextureFormat,
     #[pyo3(get, set)]
     pub data: Vec<u8>,
 }
@@ -118,7 +118,6 @@ impl<'a> From<SubTexture<'a>> for PyMipmap {
             format,
             data,
         } = sub;
-        let format = format as u8;
         let data = data.into_owned();
         Self {
             id,
@@ -138,8 +137,6 @@ impl<'a> From<PyMipmap> for SubTexture<'a> {
             format,
             data,
         } = mip;
-        //TODO: deal with the error variant properly
-        let format = TextureFormat::from_id(format as u32).unwrap();
         let data = data.into();
         Self {
             id,
@@ -169,12 +166,7 @@ impl PyMap {
 impl PyTexture {
     fn __repr__(&self) -> PyResult<String> {
         let mip = match self.mipmaps.get(0) {
-            Some(m) => format!(
-                " {:?} {}x{}",
-                TextureFormat::from_id(m.format as u32),
-                m.width,
-                m.height
-            ),
+            Some(m) => format!(" {:?} {}x{}", m.format, m.width, m.height),
             None => "".to_string(),
         };
         Ok(format!(
@@ -203,6 +195,7 @@ fn txp(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_class::<PyMap>()?;
     m.add_class::<PyTexture>()?;
     m.add_class::<PyMipmap>()?;
+    m.add_class::<TextureFormat>()?;
 
     Ok(())
 }

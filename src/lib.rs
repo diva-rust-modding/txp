@@ -1,5 +1,8 @@
 use std::borrow::Cow;
 
+#[cfg(feature = "pyo3")]
+use pyo3::prelude::*;
+
 #[cfg(feature = "ddsfile")]
 pub mod dds;
 #[cfg(feature = "image")]
@@ -44,6 +47,7 @@ pub struct SubTexture<'a> {
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u32)]
+#[cfg_attr(feature = "pyo3", pyclass)]
 pub enum TextureFormat {
     RGB = 1,
     RGBA,
