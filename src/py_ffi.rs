@@ -1,3 +1,4 @@
+use pyo3::exceptions::PyException;
 use pyo3::prelude::*;
 use pyo3::wrap_pyfunction;
 
@@ -91,6 +92,24 @@ impl<'a> From<Map<'a>> for PyMap {
     }
 }
 
+impl<'a> From<PyMap> for Map<'a> {
+    fn from(map: PyMap) -> Self {
+        if map.sides.len() == 1 {
+            let fst = map.sides.get(0).unwrap().clone();
+            Map::Texture(fst.into())
+        } else {
+            Map::Array(TextureArray {
+                name: None,
+                sides: map
+                    .sides
+                    .into_iter()
+                    .map(|x| x.mipmaps.into_iter().map(Into::into).collect())
+                    .collect(),
+            })
+        }
+    }
+}
+
 impl<'a> From<TextureArray<'a>> for PyMap {
     fn from(arr: TextureArray<'a>) -> Self {
         let sides = arr
@@ -107,6 +126,15 @@ impl<'a> From<Texture<'a>> for PyTexture {
     fn from(tex: Texture<'a>) -> Self {
         let mipmaps = tex.mipmaps.into_iter().map(Into::into).collect();
         Self { mipmaps }
+    }
+}
+impl<'a> From<PyTexture> for Texture<'a> {
+    fn from(tex: PyTexture) -> Self {
+        let mipmaps = tex.mipmaps.into_iter().map(Into::into).collect();
+        Self {
+            name: None,
+            mipmaps,
+        }
     }
 }
 impl<'a> From<SubTexture<'a>> for PyMipmap {
@@ -162,8 +190,25 @@ impl PyMap {
     }
 }
 
+struct ExternalError<E>(E);
+
+impl<E: std::error::Error> From<ExternalError<E>> for PyErr {
+    fn from(err: ExternalError<E>) -> Self {
+        PyException::new_err(err.0.to_string())
+    }
+}
+
 #[pymethods]
 impl PyTexture {
+    #[cfg(feature = "ddsfile")]
+    pub fn to_dds_bytes(&self) -> PyResult<Vec<u8>> {
+        let txp: Texture = self.clone().into();
+        let dds = txp.to_dds().map_err(ExternalError)?;
+        let mut vec = vec![];
+        dds.write(&mut vec).map_err(ExternalError)?;
+        Ok(vec)
+    }
+
     fn __repr__(&self) -> PyResult<String> {
         let mip = match self.mipmaps.get(0) {
             Some(m) => format!(" {:?} {}x{}", m.format, m.width, m.height),
