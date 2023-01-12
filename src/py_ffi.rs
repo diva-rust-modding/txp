@@ -39,8 +39,8 @@ pub struct PyMipmap {
 }
 
 #[pymethods]
-#[cfg(feature = "image")]
 impl PyMipmap {
+    #[cfg(feature = "image")]
     fn to_rgb(&self) -> Option<Vec<(u8, u8, u8)>> {
         let sub: SubTexture<'_> = self.clone().into();
         sub.to_dynamic_image().map(|x| {
@@ -50,6 +50,7 @@ impl PyMipmap {
                 .collect()
         })
     }
+    #[cfg(feature = "image")]
     fn to_rgba(&self) -> Option<Vec<(u8, u8, u8, u8)>> {
         let sub: SubTexture<'_> = self.clone().into();
         sub.to_dynamic_image().map(|x| {
