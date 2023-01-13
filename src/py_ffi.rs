@@ -56,10 +56,9 @@ impl PyMipmap {
     }
 
     fn __repr__(&self) -> PyResult<String> {
-        let format = TextureFormat::from_id(self.format as u32);
         Ok(format!(
             "PyMipMap: {:?} {}x{} ({} bytes)",
-            format,
+            self.format,
             self.width,
             self.height,
             self.data.len()
@@ -153,15 +152,13 @@ impl<E: std::error::Error> From<ExternalError<E>> for PyErr {
 
 #[pymethods]
 impl PyTexture {
-    #[cfg(feature = "ddsfile")]
-    pub fn to_dds_bytes(&self) -> PyResult<Vec<u8>> {
-        let txp: Texture = self.clone().into();
-        let dds = txp.to_dds().map_err(ExternalError)?;
+    fn to_dds_bytes(&self) -> PyResult<Vec<u8>> {
+        let tex: Texture<'_> = self.clone().into();
+        let dds = tex.to_dds().map_err(ExternalError)?;
         let mut vec = vec![];
         dds.write(&mut vec).map_err(ExternalError)?;
         Ok(vec)
     }
-
     fn __repr__(&self) -> PyResult<String> {
         let mip = match self.subtextures.get(0).and_then(|x| x.get(0)) {
             Some(m) => format!(" {:?} {}x{}", m.format, m.width, m.height),

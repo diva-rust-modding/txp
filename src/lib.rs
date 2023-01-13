@@ -22,7 +22,7 @@ pub struct Texture<'a> {
     pub subtextures: Vec<Vec<Mipmap<'a>>>,
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Default, PartialEq, Clone)]
 pub struct Mipmap<'a> {
     id: u32,
     pub width: u32,
@@ -32,11 +32,12 @@ pub struct Mipmap<'a> {
 }
 
 #[non_exhaustive]
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
 #[repr(u32)]
 #[cfg_attr(feature = "pyo3", pyclass)]
 pub enum TextureFormat {
     A8 = 0,
+    #[default]
     RGB8 = 1,
     RGBA8 = 2,
     RGB5 = 3,

@@ -9,117 +9,129 @@ use std::convert::TryInto;
 use super::*;
 
 impl Texture<'_> {
-    pub fn to_d3d(&self) -> Result<Dds, ddsfile::Error> {
-        let mipmaps = &self.subtextures[0];
-        let first = &mipmaps[0];
+    fn caps2() -> ddsfile::Caps2 {
+        use ddsfile::Caps2;
+        let mut caps = Caps2::all();
+        caps.remove(Caps2::VOLUME);
+        caps
+    }
+    fn d3d(&self) -> Result<Dds, ddsfile::Error> {
+        let def = Default::default();
+        let first = self
+            .subtextures
+            .get(0)
+            .and_then(|x| x.get(0))
+            .unwrap_or(&def);
         let format = first
             .format
             .to_d3d()
             .ok_or(ddsfile::Error::UnsupportedFormat)?;
-        let mips = mipmaps.len().try_into().ok();
-        let mut dds = Dds::new_d3d(first.height, first.width, None, format, mips, None)?;
-        let data = mipmaps.iter().flat_map(|m| &m.data[..]).copied().collect();
-        dds.data = data;
-        Ok(dds)
+        let mips = self
+            .subtextures
+            .get(0)
+            .and_then(|x| x.len().try_into().ok());
+        let sides = self.subtextures.len().try_into().ok().filter(|&x| x > 1);
+        let caps2 = Some(Self::caps2()).filter(|_| sides == Some(6));
+        dbg!(
+            first.height,
+            first.width,
+            sides,
+            first.format,
+            format,
+            mips,
+            caps2
+        );
+        Dds::new_d3d(first.height, first.width, sides, format, mips, caps2)
     }
-    pub fn to_dxgi(&self) -> Result<Dds, ddsfile::Error> {
+    pub fn dxgi(&self) -> Result<Dds, ddsfile::Error> {
         use TextureFormat::*;
-        let mipmaps = &self.subtextures[0];
-        let first = &mipmaps[0];
+        let def = Default::default();
+        let first = self
+            .subtextures
+            .get(0)
+            .and_then(|x| x.get(0))
+            .unwrap_or(&def);
         let format = first.format.to_dxgi();
         let alpha = match first.format {
             DXT1 | DXT1a => AlphaMode::PreMultiplied,
             _ => AlphaMode::Straight,
         };
-        let mips = mipmaps.len().try_into().ok();
-        let mut dds = Dds::new_dxgi(
+        let mips = self.subtextures.get(0).map(|x| x.len() as u32);
+        let sides = self.subtextures.len().try_into().ok().filter(|&x| x > 1);
+        let caps2 = Some(Self::caps2()).filter(|_| sides == Some(6));
+        dbg!(
+            first.height,
+            first.width,
+            first.format,
+            format,
+            mips,
+            sides,
+            caps2,
+            self.subtextures.len() == 6,
+            alpha,
+        );
+        Dds::new_dxgi(
             first.height,
             first.width,
             None,
             format,
             mips,
-            None,
-            None,
-            false,
+            sides,
+            caps2,
+            self.subtextures.len() == 6,
             D3D10ResourceDimension::Texture2D,
             alpha,
-        )?;
-        let data = mipmaps.iter().flat_map(|m| &m.data[..]).copied().collect();
-        dds.data = data;
-        Ok(dds)
+        )
     }
     pub fn to_dds(&self) -> Result<Dds, ddsfile::Error> {
-        self.to_d3d().or_else(|_| self.to_dxgi())
-    }
-}
-
-impl Mipmap<'_> {
-    pub fn to_d3d(&self) -> Result<Dds, ddsfile::Error> {
-        let format = self
-            .format
-            .to_d3d()
-            .ok_or(ddsfile::Error::UnsupportedFormat)?;
-        let mut dds = Dds::new_d3d(self.height, self.width, None, format, None, None)?;
-        dds.data = self.data.clone().into_owned();
-        Ok(dds)
-    }
-
-    pub fn to_dxgi(&self) -> Result<Dds, ddsfile::Error> {
-        use TextureFormat::*;
-        let format = self.format.to_dxgi();
-        let alpha = match self.format {
-            DXT1 | DXT1a => AlphaMode::PreMultiplied,
-            _ => AlphaMode::Straight,
-        };
-        let mut dds = Dds::new_dxgi(
-            self.height,
-            self.width,
-            None,
-            format,
-            None,
-            None,
-            None,
-            false,
-            D3D10ResourceDimension::Texture2D,
-            alpha,
-        )?;
-        dds.data = self.data.clone().into_owned();
-        Ok(dds)
-    }
-    pub fn to_dds(&self) -> Result<Dds, ddsfile::Error> {
-        self.to_d3d().or_else(|_| self.to_dxgi())
+        let dds = self.d3d().or_else(|_| self.dxgi());
+        dds.map(|mut x| {
+            x.data = self
+                .subtextures
+                .iter()
+                .flat_map(|x| x.iter().flat_map(|x| &x.data[..]))
+                .cloned()
+                .collect();
+            x
+        })
     }
 }
 
 impl TextureFormat {
     pub fn to_d3d(&self) -> Option<D3DFormat> {
         use TextureFormat::*;
-        Some(match self {
-            RGB => D3DFormat::R8G8B8,
-            RGBA => D3DFormat::A8R8G8B8,
-            L8 => D3DFormat::L8,
-            L8A8 => D3DFormat::A8L8,
-            DXT1 | DXT1a => D3DFormat::DXT1,
-            DXT3 => D3DFormat::DXT3,
-            DXT5 => D3DFormat::DXT5,
-            _ => return None,
-        })
+        match self {
+            A8 => Some(D3DFormat::A8),
+            RGB8 => Some(D3DFormat::R8G8B8),
+            RGBA8 => Some(D3DFormat::A8R8G8B8),
+            RGB5 => Some(D3DFormat::R5G6B5),
+            RGB5A1 => Some(D3DFormat::A1R5G5B5),
+            RGBA4 => Some(D3DFormat::A4R4G4B4),
+            DXT1 => Some(D3DFormat::DXT1),
+            DXT1a => Some(D3DFormat::DXT1),
+            DXT3 => Some(D3DFormat::DXT3),
+            DXT5 => Some(D3DFormat::DXT5),
+            L8 => Some(D3DFormat::L8),
+            L8A8 => Some(D3DFormat::A8L8),
+            _ => None,
+        }
     }
 
     pub fn to_dxgi(&self) -> DxgiFormat {
         use TextureFormat::*;
         match self {
-            RGB => DxgiFormat::R8G8B8A8_UNorm, //TODO: Test if this actually works
-            RGBA => DxgiFormat::R8G8B8A8_UNorm,
+            A8 => DxgiFormat::A8_UNorm,
+            RGB8 | RGBA8 => DxgiFormat::R8G8B8A8_UNorm,
+            RGB5 => DxgiFormat::B5G6R5_UNorm,
+            RGB5A1 => DxgiFormat::B5G5R5A1_UNorm,
             RGBA4 => DxgiFormat::B4G4R4A4_UNorm,
-            L8 => DxgiFormat::R8_UNorm,
-            L8A8 => DxgiFormat::R8G8_UNorm,
-            DXT1 => DxgiFormat::BC1_UNorm,
-            DXT1a => DxgiFormat::BC1_UNorm,
+            DXT1 | DXT1a => DxgiFormat::BC1_UNorm,
             DXT3 => DxgiFormat::BC2_UNorm,
             DXT5 => DxgiFormat::BC3_UNorm,
             ATI1 => DxgiFormat::BC4_UNorm,
             ATI2 => DxgiFormat::BC5_UNorm,
+            L8 => DxgiFormat::A8_UNorm,
+            L8A8 => DxgiFormat::A8P8,
         }
     }
 }
