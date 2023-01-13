@@ -8,21 +8,14 @@ use super::*;
 #[derive(Debug, PartialEq, Clone)]
 pub struct PyTextureAtlas {
     #[pyo3(get, set)]
-    pub maps: Vec<PyMap>,
-}
-
-#[pyclass]
-#[derive(Debug, PartialEq, Clone)]
-pub struct PyMap {
-    #[pyo3(get, set)]
-    pub sides: Vec<PyTexture>,
+    pub textures: Vec<PyTexture>,
 }
 
 #[pyclass]
 #[derive(Debug, PartialEq, Clone)]
 pub struct PyTexture {
     #[pyo3(get, set)]
-    pub mipmaps: Vec<PyMipmap>,
+    pub subtextures: Vec<Vec<PyMipmap>>,
 }
 
 #[pyclass]
@@ -76,65 +69,29 @@ impl PyMipmap {
 
 impl<'a> From<TextureAtlas<'a>> for PyTextureAtlas {
     fn from(atlas: TextureAtlas<'a>) -> Self {
-        let maps = atlas.0.into_iter().map(Into::into).collect();
-        Self { maps }
+        let textures = atlas.0.into_iter().map(Into::into).collect();
+        Self { textures }
     }
 }
 
-impl<'a> From<Map<'a>> for PyMap {
-    fn from(map: Map<'a>) -> Self {
-        match map {
-            Map::Texture(t) => Self {
-                sides: vec![t.into()],
-            },
-            Map::Array(a) => a.into(),
-        }
-    }
-}
-
-impl<'a> From<PyMap> for Map<'a> {
-    fn from(map: PyMap) -> Self {
-        if map.sides.len() == 1 {
-            let fst = map.sides.get(0).unwrap().clone();
-            Map::Texture(fst.into())
-        } else {
-            Map::Array(TextureArray {
-                name: None,
-                sides: map
-                    .sides
-                    .into_iter()
-                    .map(|x| x.mipmaps.into_iter().map(Into::into).collect())
-                    .collect(),
-            })
-        }
-    }
-}
-
-impl<'a> From<TextureArray<'a>> for PyMap {
-    fn from(arr: TextureArray<'a>) -> Self {
-        let sides = arr
-            .sides
-            .into_iter()
-            .map(|mip| PyTexture {
-                mipmaps: mip.into_iter().map(Into::into).collect(),
-            })
-            .collect();
-        Self { sides }
-    }
-}
 impl<'a> From<Texture<'a>> for PyTexture {
     fn from(tex: Texture<'a>) -> Self {
-        let mipmaps = tex.mipmaps.into_iter().map(Into::into).collect();
-        Self { mipmaps }
+        let subtextures = tex
+            .subtextures
+            .into_iter()
+            .map(|x| x.into_iter().map(Into::into).collect())
+            .collect();
+        Self { subtextures }
     }
 }
 impl<'a> From<PyTexture> for Texture<'a> {
     fn from(tex: PyTexture) -> Self {
-        let mipmaps = tex.mipmaps.into_iter().map(Into::into).collect();
-        Self {
-            name: None,
-            mipmaps,
-        }
+        let subtextures = tex
+            .subtextures
+            .into_iter()
+            .map(|x| x.into_iter().map(Into::into).collect())
+            .collect();
+        Self { subtextures }
     }
 }
 impl<'a> From<Mipmap<'a>> for PyMipmap {
@@ -179,14 +136,10 @@ impl<'a> From<PyMipmap> for Mipmap<'a> {
 #[pymethods]
 impl PyTextureAtlas {
     fn __repr__(&self) -> PyResult<String> {
-        Ok(format!("PyTextureAtlas: {} map(s)", self.maps.len()))
-    }
-}
-
-#[pymethods]
-impl PyMap {
-    fn __repr__(&self) -> PyResult<String> {
-        Ok(format!("PyMap: {} side(s)", self.sides.len()))
+        Ok(format!(
+            "PyTextureAtlas: {} texture(s)",
+            self.textures.len()
+        ))
     }
 }
 
@@ -210,13 +163,13 @@ impl PyTexture {
     }
 
     fn __repr__(&self) -> PyResult<String> {
-        let mip = match self.mipmaps.get(0) {
+        let mip = match self.subtextures.get(0).and_then(|x| x.get(0)) {
             Some(m) => format!(" {:?} {}x{}", m.format, m.width, m.height),
             None => "".to_string(),
         };
         Ok(format!(
-            "PyTexture: {} mipmap(s){}",
-            self.mipmaps.len(),
+            "PyTexture: {} subtexture(s){}",
+            self.subtextures.len(),
             mip
         ))
     }
@@ -237,7 +190,6 @@ fn read(path: String) -> PyResult<PyTextureAtlas> {
 fn txp(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_wrapped(wrap_pyfunction!(self::read))?;
     m.add_class::<PyTextureAtlas>()?;
-    m.add_class::<PyMap>()?;
     m.add_class::<PyTexture>()?;
     m.add_class::<PyMipmap>()?;
     m.add_class::<TextureFormat>()?;

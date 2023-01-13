@@ -1,14 +1,14 @@
+#[cfg(feature = "image")]
+use ::image::{Bgr, Bgra, DynamicImage, ImageBuffer, Rgb, Rgba};
 use dcv_color_primitives::*;
-#[cfg(feature="image")]
-use ::image::{DynamicImage, ImageBuffer, Rgba, Rgb, Bgr, Bgra};
 
 use super::*;
 
 const NV12: ImageFormat = ImageFormat {
-            pixel_format: PixelFormat::Nv12,
-            color_space: ColorSpace::Bt709,
-            num_planes: 2,
-        };
+    pixel_format: PixelFormat::Nv12,
+    color_space: ColorSpace::Bt709,
+    num_planes: 2,
+};
 
 const BGRA: ImageFormat = ImageFormat {
     pixel_format: PixelFormat::Bgra,
@@ -18,15 +18,20 @@ const BGRA: ImageFormat = ImageFormat {
 
 impl Texture<'_> {
     pub fn is_yuv(&self) -> bool {
-        self.mipmaps.len() == 2 && self.mipmaps.iter().all(|d| d.format == TextureFormat::ATI2)
+        let def = vec![];
+        let mipmaps = self.subtextures.get(0).unwrap_or(&def);
+        self.subtextures.len() == 1
+            && mipmaps.len() == 2
+            && mipmaps.iter().all(|d| d.format == TextureFormat::ATI2)
     }
 
     pub fn yuv_to_bgra(&self) -> Result<Vec<u8>, ErrorKind> {
         dcv_color_primitives::initialize();
 
+        let mipmaps = &self.subtextures[0];
 
-        let ay = &self.mipmaps[0];
-        let uv = &self.mipmaps[1];
+        let ay = &mipmaps[0];
+        let uv = &mipmaps[1];
 
         let src_sizes: &mut [usize] = &mut [0usize; 2];
         get_buffers_size(ay.width, ay.height, &NV12, None, src_sizes)?;
@@ -73,11 +78,12 @@ impl Texture<'_> {
         Ok(dst_rgba)
     }
 
-    #[cfg(feature="image")]
+    #[cfg(feature = "image")]
     pub fn yuv_to_image(&self) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, ErrorKind> {
         let rgba = self.yuv_to_bgra()?;
-        let w = self.mipmaps[0].width;
-        let h = self.mipmaps[0].height;
+        let mipmaps = &self.subtextures[0];
+        let w = mipmaps[0].width;
+        let h = mipmaps[0].height;
         let image = ImageBuffer::from_raw(w, h, rgba).unwrap();
         // Ok(DynamicImage::ImageRgba8(image))
         Ok(image)

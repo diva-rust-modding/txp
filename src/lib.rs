@@ -15,25 +15,11 @@ mod read;
 mod yuv;
 
 #[derive(Debug, PartialEq, Clone)]
-pub struct TextureAtlas<'a>(pub Vec<Map<'a>>);
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum Map<'a> {
-    Texture(Texture<'a>),
-    Array(TextureArray<'a>),
-}
+pub struct TextureAtlas<'a>(pub Vec<Texture<'a>>);
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture<'a> {
-    pub mipmaps: Vec<Mipmap<'a>>,
-    pub name: Option<Cow<'a, str>>,
-}
-
-type Sides<'a> = Vec<Mipmap<'a>>;
-#[derive(Debug, PartialEq, Clone)]
-pub struct TextureArray<'a> {
-    pub sides: Vec<Sides<'a>>,
-    pub name: Option<Cow<'a, str>>,
+    pub subtextures: Vec<Vec<Mipmap<'a>>>,
 }
 
 #[derive(Debug, PartialEq, Clone)]

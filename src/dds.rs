@@ -10,31 +10,28 @@ use super::*;
 
 impl Texture<'_> {
     pub fn to_d3d(&self) -> Result<Dds, ddsfile::Error> {
-        let first = &self.mipmaps[0];
+        let mipmaps = &self.subtextures[0];
+        let first = &mipmaps[0];
         let format = first
             .format
             .to_d3d()
             .ok_or(ddsfile::Error::UnsupportedFormat)?;
-        let mips = self.mipmaps.len().try_into().ok();
+        let mips = mipmaps.len().try_into().ok();
         let mut dds = Dds::new_d3d(first.height, first.width, None, format, mips, None)?;
-        let data = self
-            .mipmaps
-            .iter()
-            .flat_map(|m| &m.data[..])
-            .copied()
-            .collect();
+        let data = mipmaps.iter().flat_map(|m| &m.data[..]).copied().collect();
         dds.data = data;
         Ok(dds)
     }
     pub fn to_dxgi(&self) -> Result<Dds, ddsfile::Error> {
         use TextureFormat::*;
-        let first = &self.mipmaps[0];
+        let mipmaps = &self.subtextures[0];
+        let first = &mipmaps[0];
         let format = first.format.to_dxgi();
         let alpha = match first.format {
             DXT1 | DXT1a => AlphaMode::PreMultiplied,
             _ => AlphaMode::Straight,
         };
-        let mips = self.mipmaps.len().try_into().ok();
+        let mips = mipmaps.len().try_into().ok();
         let mut dds = Dds::new_dxgi(
             first.height,
             first.width,
@@ -47,12 +44,7 @@ impl Texture<'_> {
             D3D10ResourceDimension::Texture2D,
             alpha,
         )?;
-        let data = self
-            .mipmaps
-            .iter()
-            .flat_map(|m| &m.data[..])
-            .copied()
-            .collect();
+        let data = mipmaps.iter().flat_map(|m| &m.data[..]).copied().collect();
         dds.data = data;
         Ok(dds)
     }

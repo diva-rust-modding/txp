@@ -26,30 +26,9 @@ impl<'a> TextureAtlas<'a> {
         let (i, endian) = parse_magic(3)(i0)?;
         let (i, map_count) = u32(endian)(i)?;
         let (i, _) = u32(endian)(i)?;
-        let parse = alt((
-            map(Texture::parse, Map::Texture),
-            map(TextureArray::parse, Map::Array),
-        ));
+        let parse = alt((Texture::parse, Texture::parse_array));
         let (_, maps) = offset_table(i0, parse, map_count.try_into().unwrap(), endian).parse(i)?;
         Ok((i, Self(maps)))
-    }
-}
-
-impl<'a> TextureArray<'a> {
-    pub fn parse(i0: &'a [u8]) -> IResult<&'a [u8], TextureArray<'a>> {
-        use nom::multi::count;
-        let (i, endian) = parse_magic(5)(i0)?;
-        let (i, total_mip_count) = u32(endian)(i)?;
-        let (i, mipdata) = u32(endian)(i)?;
-        let depth = (mipdata & 0xFF00) >> 8;
-        let mip_count = total_mip_count / depth;
-        let (_, sides) = count(
-            offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian),
-            depth as usize,
-        )
-        .parse(i)?;
-        //let sides = sides.into_iter().map(|mipmaps| Side { mipmaps }).collect();
-        Ok((i, Self { sides, name: None }))
     }
 }
 
@@ -63,10 +42,24 @@ impl<'a> Texture<'a> {
         Ok((
             i,
             Self {
-                mipmaps,
-                name: None,
+                subtextures: vec![mipmaps],
             },
         ))
+    }
+    pub fn parse_array(i0: &'a [u8]) -> IResult<&'a [u8], Texture<'a>> {
+        use nom::multi::count;
+        let (i, endian) = parse_magic(5)(i0)?;
+        let (i, total_mip_count) = u32(endian)(i)?;
+        let (i, mipdata) = u32(endian)(i)?;
+        let depth = (mipdata & 0xFF00) >> 8;
+        let mip_count = total_mip_count / depth;
+        let (_, subtextures) = count(
+            offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian),
+            depth as usize,
+        )
+        .parse(i)?;
+        //let sides = sides.into_iter().map(|mipmaps| Side { mipmaps }).collect();
+        Ok((i, Self { subtextures }))
     }
 }
 
