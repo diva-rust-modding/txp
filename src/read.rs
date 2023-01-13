@@ -128,17 +128,20 @@ impl TextureFormat {
     pub(crate) fn from_id(id: u32) -> Option<Self> {
         use super::TextureFormat::*;
         match id {
-            1 => Some(RGB),
-            2 => Some(RGBA),
-            3 => Some(RGBA4),
-            4 => Some(L8),
-            5 => Some(L8A8),
-            6 => Some(DXT1),
-            7 => Some(DXT1a),
-            8 => Some(DXT3),
-            9 => Some(DXT5),
-            10 => Some(ATI1),
-            11 => Some(ATI2),
+            0 => Some(Self::A8),
+            1 => Some(Self::RGB8),
+            2 => Some(Self::RGBA8),
+            3 => Some(Self::RGB5),
+            4 => Some(Self::RGB5A1),
+            5 => Some(Self::RGBA4),
+            6 => Some(Self::DXT1),
+            7 => Some(Self::DXT1a),
+            8 => Some(Self::DXT3),
+            9 => Some(Self::DXT5),
+            10 => Some(Self::ATI1),
+            11 => Some(Self::ATI2),
+            12 => Some(Self::L8),
+            13 => Some(Self::L8A8),
             _ => None,
         }
     }

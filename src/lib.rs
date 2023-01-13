@@ -31,19 +31,23 @@ pub struct Mipmap<'a> {
     pub data: Cow<'a, [u8]>,
 }
 
+#[non_exhaustive]
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u32)]
 #[cfg_attr(feature = "pyo3", pyclass)]
 pub enum TextureFormat {
-    RGB = 1,
-    RGBA,
-    RGBA4, //Theoretical Formats, (Only observed in EBOOT)
-    L8,    //Theoretical Formats, (Only observed in EBOOT)
-    L8A8,  //Theoretical Formats, (Only observed in EBOOT)
-    DXT1,
-    DXT1a, //Theoretical Formats, (Only observed in EBOOT)
-    DXT3,
-    DXT5,
-    ATI1, //Theoretical Formats, (Only observed in EBOOT)
-    ATI2,
+    A8 = 0,
+    RGB8 = 1,
+    RGBA8 = 2,
+    RGB5 = 3,
+    RGB5A1 = 4,
+    RGBA4 = 5,
+    DXT1 = 6,
+    DXT1a = 7,
+    DXT3 = 8,
+    DXT5 = 9,
+    ATI1 = 10,
+    ATI2 = 11,
+    L8 = 12,
+    L8A8 = 13,
 }
