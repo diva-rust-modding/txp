@@ -1,5 +1,13 @@
 /target
 **/*.rs.bk
-Cargo.lock
 tags
 /assets/*/
+
+# Shared libraries
+*.so
+*.pyd
+*.dll
+
+# Nix stuff
+.direnv/
+result
