@@ -70,7 +70,7 @@
       in rec {
         packages = rec {
           txp = txp-drv pkgs;
-          txp-python = txp-python-drv pkgs false pkgs.python3Packages;
+          txp-python = txp-python-drv pkgs true pkgs.python310Packages;
           default = txp;
         };
         devShells.default = pkgs.mkShell rec {
@@ -97,7 +97,7 @@
         };
         devShells.python = pkgs.mkShell rec {
           buildInputs = with pkgs; [
-            (pkgs.python3.withPackages (p:
+            (pkgs.python310.withPackages (p:
               with p; [
                 packages.txp-python
               ]))
@@ -108,7 +108,7 @@
     // {
       overlays.default = final: prev: rec {
         txp = txp-drv prev;
-        python3 = prev.python3.override (pythonOverride prev false);
+        python3 = prev.python3.override (pythonOverride prev true);
         python310 = prev.python310.override (pythonOverride prev true);
         python39 = prev.python39.override (pythonOverride prev false);
       };
