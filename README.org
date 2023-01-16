@@ -1,5 +1,3 @@
-#+title: txp
-
 * txp
 =txp= is a rust library for manipulating SEGA's proprietary texture format (`_tex.bin`) used in various games.
 The games that use this format are (but are not limited to):
@@ -11,7 +9,7 @@ In Hatsune Miku: Project DIVA F2nd and X/XHD, the format was updated and thus th
 #+end_note
 
 ** Features
-=txp= can be built with extra features that
+=txp= can be built with extra features:
 - =ddsfile= :: Enables integration with the =ddsfile= library to convert to/from .dds
 - =pyo3= :: Python integration
 
@@ -71,7 +69,7 @@ The default package to be build is the rust crate.
 #+begin_src sh
 nix build github:waelwindows/txp
 #+end_src
-To build the python wheel, build the =txp-python= like
+To build the python wheel, build the =txp-python= package as following,
 #+begin_src sh
 nix build github:waelwindows/txp#txp-python
 #+end_src
@@ -92,7 +90,7 @@ yourDerivationHere {
     txp
     # or the python bindings
     (python3.withPackages (p: [ p.txp ]))
-  ]:
+  ];
 }
 #+end_src
 
