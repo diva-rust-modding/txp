@@ -85,6 +85,7 @@
           buildInputs = with pkgs; [
             maturin
             rust-analyzer
+            cargo-semver-checks
             pkgsCross.mingwW64.stdenv.cc
             (pkgs.python3.withPackages (p:
               with p; [
