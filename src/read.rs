@@ -162,7 +162,7 @@ mod tests {
         assert_eq!(mip.id, 0);
         assert_eq!(mip.width, 256);
         assert_eq!(mip.height, 8);
-        assert_eq!(mip.format, TextureFormat::RGB);
+        assert_eq!(mip.format, TextureFormat::RGB8);
     }
 
     #[test]
@@ -170,7 +170,7 @@ mod tests {
         let input = &INPUT[TEX_OFF..];
         let (_, tex) = Texture::parse(input).unwrap();
         println!("{:?}", tex);
-        assert_eq!(tex.mipmaps.len(), 1);
+        assert_eq!(tex.subtextures[0].len(), 1);
     }
 
     #[test]

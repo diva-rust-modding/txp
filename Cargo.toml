@@ -20,3 +20,7 @@ pyo3 = { version = "0.17.3", optional = true, features = ["extension-module", "a
 structopt = "0.3.14"
 anyhow = "1.0.28"
 tabwriter = "1.2.1"
+
+[[example]]
+name = "extract"
+required-features = ["image", "ddsfile"]

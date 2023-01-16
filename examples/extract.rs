@@ -30,36 +30,24 @@ fn main() -> Result<()> {
         .join(opt.input.file_stem().unwrap());
     std::fs::create_dir(&path);
     let ext = opt.ext.unwrap_or("png".into());
-    for (i, map) in atlas.0.into_iter().enumerate() {
-        match map {
-            Map::Texture(t) => {
+    for (i, tex) in atlas.0.into_iter().enumerate() {
+        if ext == "dds" {
+            let name = format!("tex{}.{}", i, ext);
+            let path = path.join(name);
+            let mut save = File::create(path)?;
+            let dds = tex.to_dds()?;
+            dds.write(&mut save)?;
+        } else {
+            if tex.subtextures.len() == 1 {
                 let name = format!("tex{}.{}", i, ext);
                 let path = path.join(name);
-                if ext == "dds" {
-                    let mut save = File::create(path)?;
-                    let dds = t.to_dds()?;
-                    dds.write(&mut save)?;
-                } else {
-                    if t.is_yuv() {
-                        let image = t.yuv_to_image()?;
-                        // image.flipv().save(path);
-                        image.save(path);
-                    } else {
-                        image_extract(t.mipmaps[0].clone(), path);
-                    }
-                }
-            }
-            Map::Array(m) => {
-                for (j, side) in m.sides.iter().enumerate() {
-                    let name = format!("tex{}_side{}.{}", i, j, ext);
+                let t = &tex.subtextures[0];
+                image_extract(t[0].clone(), path);
+            } else {
+                for (j, side) in tex.subtextures.iter().enumerate() {
+                    let name = format!("tex{}_sub{}.{}", i, j, ext);
                     let path = path.join(name);
-                    if ext == "dds" {
-                        let mut save = File::create(path)?;
-                        let dds = side[0].to_dds()?;
-                        dds.write(&mut save)?;
-                    } else {
-                        image_extract(side[0].clone(), path);
-                    }
+                    image_extract(side[0].clone(), path);
                 }
             }
         }

@@ -25,18 +25,14 @@ fn main() -> Result<()> {
     let mut data = vec![];
     file.read_to_end(&mut data)?;
     let (_, atlas) = TextureAtlas::parse(&data).unwrap();
-    for (i, map) in atlas.0.iter().enumerate() {
-        match map {
-            Map::Texture(t) => {
-                println!("Texture #{} w/ {} mip(s)", i + 1, t.mipmaps.len());
-                print_mips(&t.mipmaps, "");
-            }
-            Map::Array(t) => {
-                println!("Texture Array #{} w/ {} side(s)", i + 1, t.sides.len());
-                for (i, side) in t.sides.iter().enumerate() {
-                    println!("    Side {} has {} mip(s)", i + 1, side.len());
-                    print_mips(&side, "\t");
-                }
+    for (i, tex) in atlas.0.iter().enumerate() {
+        println!("Texture #{}", i + 1);
+        if tex.subtextures.len() == 1 {
+            print_mips(&tex.subtextures[0], "\t")?;
+        } else {
+            for (j, subtex) in tex.subtextures.iter().enumerate() {
+                println!("\tSubtexture #{} with {} mips", j + 1, subtex.len());
+                print_mips(&subtex, "\t")?;
             }
         }
     }
