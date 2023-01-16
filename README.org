@@ -34,7 +34,7 @@ cargo install --example metadata
 **** Python
 =txp= exposes an `abi3` Python FFI using the `pyo3` crate.
 The built bindings can be used in any python v3.7+ interpreter.
-An example is the [[https://github.com/Waelwindows/blender_io_scene_bin][blender_io_scene_bin]] plugin which is the de facto user. The main entry point of this FFI is [[./src/py_ffi.rs][=src/py_ffi.rs=]].
+An example is the [[https://github.com/Waelwindows/blender_io_scene_bin][blender_io_scene_bin]] plugin which is the de facto user. The main entry point of this FFI is [[./src/py_ffi.rs][src/py_ffi.rs]].
 
 #+begin_src python
 import txp
@@ -140,6 +140,8 @@ direnv allow
 
 at your option.
 * Contribution
+See [[./CONTRIBUTING.org][CONTRIBUTING.org]]
+
 Unless you explicitly state otherwise, any contribution intentionally submitted
 for inclusion in the work by you, as defined in the Apache-2.0 license, shall be
 dual licensed as above, without any additional terms or conditions.
