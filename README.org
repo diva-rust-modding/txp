@@ -3,7 +3,7 @@
 The games that use this format are (but are not limited to):
 - Hatsune Miku: Project DIVA (versions based on Virtua Fighter 5; Arcade, Dreamy Theater, F...)
   
-#+begin_note  
+#+begin_note
 As of writing, the =txp= library only supports the legacy txp format.
 In Hatsune Miku: Project DIVA F2nd and X/XHD, the format was updated and thus the crate cannot read the new TXP format.
 #+end_note
@@ -84,7 +84,7 @@ If prompted to specify the interpreter, use the default system interpreter `-i p
 For more information, please visit the official maturin docs.
 *** Nix (Recommended)
 =txp= also exposes a [[./flake.nix][nix flake]] for Nix users.
-The default package to be build is the rust crate.
+The default package to be built is the rust crate.
 #+begin_src sh
 nix build github:waelwindows/txp
 #+end_src
@@ -96,9 +96,9 @@ nix build github:waelwindows/txp#txp-python
 The flake also has an overlay which exposes the library and python bindings.
 It can be imported as such
 #+begin_src nix
-pkgs = import nixpkgs {
+import nixpkgs {
   inherit system;
-  overlays = [ txp.overlay.default ];
+  overlays = [ txp.overlays.default ];
 }
 #+end_src
 And used like the following
@@ -114,7 +114,7 @@ yourDerivationHere {
 #+end_src
 
 **** Development Environment
-The flake also has an devshell which contains all the necessary tools to the compile the project.
+The flake also has a devshell which contains all the necessary tools to compile the project.
 #+begin_src sh
 nix develop
 #+end_src
