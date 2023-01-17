@@ -2,6 +2,7 @@ use ddsfile;
 use ddsfile::AlphaMode;
 use ddsfile::D3D10ResourceDimension;
 use ddsfile::Dds;
+use ddsfile::NewD3dParams;
 use ddsfile::{D3DFormat, DxgiFormat};
 
 use std::convert::TryInto;
@@ -26,22 +27,28 @@ impl Texture<'_> {
             .format
             .to_d3d()
             .ok_or(ddsfile::Error::UnsupportedFormat)?;
-        let mips = self
+        let mipmap_levels = self
             .subtextures
             .get(0)
             .and_then(|x| x.len().try_into().ok());
-        let sides = self.subtextures.len().try_into().ok().filter(|&x| x > 1);
-        let caps2 = Some(Self::caps2()).filter(|_| sides == Some(6));
+        let caps2 = Some(Self::caps2()).filter(|_| self.subtextures.len() == 6);
+        let params = NewD3dParams {
+            height: first.height,
+            width: first.width,
+            depth: None,
+            format,
+            mipmap_levels,
+            caps2,
+        };
         dbg!(
             first.height,
             first.width,
-            sides,
             first.format,
             format,
-            mips,
+            mipmap_levels,
             caps2
         );
-        Dds::new_d3d(first.height, first.width, sides, format, mips, caps2)
+        Dds::new_d3d(params)
     }
     pub fn dxgi(&self) -> Result<Dds, ddsfile::Error> {
         use TextureFormat::*;
@@ -52,36 +59,37 @@ impl Texture<'_> {
             .and_then(|x| x.get(0))
             .unwrap_or(&def);
         let format = first.format.to_dxgi();
-        let alpha = match first.format {
+        let alpha_mode = match first.format {
             DXT1 | DXT1a => AlphaMode::PreMultiplied,
             _ => AlphaMode::Straight,
         };
-        let mips = self.subtextures.get(0).map(|x| x.len() as u32);
-        let sides = self.subtextures.len().try_into().ok().filter(|&x| x > 1);
-        let caps2 = Some(Self::caps2()).filter(|_| sides == Some(6));
+        let mipmap_levels = self.subtextures.get(0).map(|x| x.len() as u32);
+        let array_layers = self.subtextures.len().try_into().ok().filter(|&x| x > 1);
+        let caps2 = Some(Self::caps2()).filter(|_| self.subtextures.len() == 6);
+        let is_cubemap = self.subtextures.len() == 6;
+        let params = ddsfile::NewDxgiParams {
+            height: first.height,
+            width: first.width,
+            depth: None,
+            format,
+            mipmap_levels,
+            array_layers,
+            caps2,
+            is_cubemap,
+            resource_dimension: D3D10ResourceDimension::Texture2D,
+            alpha_mode,
+        };
         dbg!(
             first.height,
             first.width,
-            first.format,
             format,
-            mips,
-            sides,
+            mipmap_levels,
+            array_layers,
             caps2,
-            self.subtextures.len() == 6,
-            alpha,
+            is_cubemap,
+            alpha_mode,
         );
-        Dds::new_dxgi(
-            first.height,
-            first.width,
-            None,
-            format,
-            mips,
-            sides,
-            caps2,
-            self.subtextures.len() == 6,
-            D3D10ResourceDimension::Texture2D,
-            alpha,
-        )
+        Dds::new_dxgi(params)
     }
     pub fn to_dds(&self) -> Result<Dds, ddsfile::Error> {
         let dds = self.d3d().or_else(|_| self.dxgi());
