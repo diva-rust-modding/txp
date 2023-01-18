@@ -140,6 +140,8 @@ impl TextureFormat {
             ATI2 => DxgiFormat::BC5_UNorm,
             L8 => DxgiFormat::A8_UNorm,
             L8A8 => DxgiFormat::A8P8,
+            BC7 => DxgiFormat::BC7_UNorm,
+            BC6H => DxgiFormat::BC6H_Typeless,
         }
     }
 }

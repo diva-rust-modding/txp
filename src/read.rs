@@ -142,6 +142,8 @@ impl TextureFormat {
             11 => Some(Self::ATI2),
             12 => Some(Self::L8),
             13 => Some(Self::L8A8),
+            15 => Some(Self::BC7),
+            127 => Some(Self::BC6H),
             _ => None,
         }
     }

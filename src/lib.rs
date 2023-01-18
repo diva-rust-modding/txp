@@ -51,4 +51,8 @@ pub enum TextureFormat {
     ATI2 = 11,
     L8 = 12,
     L8A8 = 13,
+    /// Only available on MM+
+    BC7 = 15,
+    /// Only available on MM+
+    BC6H = 127,
 }
