@@ -41,13 +41,13 @@ fn main() -> Result<()> {
             if tex.subtextures.len() == 1 {
                 let name = format!("tex{}.{}", i, ext);
                 let path = path.join(name);
-                let t = &tex.subtextures[0];
+                let t = &tex.subtextures[0].mipmaps;
                 image_extract(t[0].clone(), path);
             } else {
                 for (j, side) in tex.subtextures.iter().enumerate() {
                     let name = format!("tex{}_sub{}.{}", i, j, ext);
                     let path = path.join(name);
-                    image_extract(side[0].clone(), path);
+                    image_extract(side.mipmaps[0].clone(), path);
                 }
             }
         }

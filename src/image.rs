@@ -18,6 +18,7 @@ impl<'a> Mipmap<'a> {
     }
 
     pub fn to_rgb(&self) -> Option<ImageBuffer<Rgb<u8>, &[u8]>> {
+        use TextureFormat::*;
         match self.format {
             RGB => ImageBuffer::from_raw(self.width, self.height, &self.data),
             _ => None,
@@ -25,6 +26,7 @@ impl<'a> Mipmap<'a> {
     }
 
     pub fn to_rgba(&self) -> Option<ImageBuffer<Rgba<u8>, &[u8]>> {
+        use TextureFormat::*;
         match self.format {
             RGBA => ImageBuffer::from_raw(self.width, self.height, &self.data),
             _ => None,
@@ -32,6 +34,7 @@ impl<'a> Mipmap<'a> {
     }
 
     pub fn to_luma(&self) -> Option<ImageBuffer<Luma<u8>, &[u8]>> {
+        use TextureFormat::*;
         match self.format {
             L8 => ImageBuffer::from_raw(self.width, self.height, &self.data),
             _ => None,

@@ -18,20 +18,25 @@ const BGRA: ImageFormat = ImageFormat {
 
 impl Texture<'_> {
     pub fn is_yuv(&self) -> bool {
-        let def = vec![];
-        let mipmaps = self.subtextures.get(0).unwrap_or(&def);
         self.subtextures.len() == 1
-            && mipmaps.len() == 2
-            && mipmaps.iter().all(|d| d.format == TextureFormat::ATI2)
+            && self
+                .subtextures
+                .get(0)
+                .map(Subtexture::is_yuv)
+                .unwrap_or_default()
+    }
+}
+
+impl Subtexture<'_> {
+    pub fn is_yuv(&self) -> bool {
+        self.mipmaps.len() == 2 && self.mipmaps.iter().all(|d| d.format == TextureFormat::ATI2)
     }
 
     pub fn yuv_to_bgra(&self) -> Result<Vec<u8>, ErrorKind> {
         dcv_color_primitives::initialize();
 
-        let mipmaps = &self.subtextures[0];
-
-        let ay = &mipmaps[0];
-        let uv = &mipmaps[1];
+        let ay = &self.mipmaps[0];
+        let uv = &self.mipmaps[1];
 
         let src_sizes: &mut [usize] = &mut [0usize; 2];
         get_buffers_size(ay.width, ay.height, &NV12, None, src_sizes)?;
@@ -81,9 +86,9 @@ impl Texture<'_> {
     #[cfg(feature = "image")]
     pub fn yuv_to_image(&self) -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>, ErrorKind> {
         let rgba = self.yuv_to_bgra()?;
-        let mipmaps = &self.subtextures[0];
-        let w = mipmaps[0].width;
-        let h = mipmaps[0].height;
+        let first = &self.mipmaps[0];
+        let w = first.width;
+        let h = first.height;
         let image = ImageBuffer::from_raw(w, h, rgba).unwrap();
         // Ok(DynamicImage::ImageRgba8(image))
         Ok(image)

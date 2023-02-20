@@ -21,7 +21,7 @@ impl Texture<'_> {
         let first = self
             .subtextures
             .get(0)
-            .and_then(|x| x.get(0))
+            .and_then(|x| x.mipmaps.get(0))
             .unwrap_or(&def);
         let format = first
             .format
@@ -30,7 +30,7 @@ impl Texture<'_> {
         let mipmap_levels = self
             .subtextures
             .get(0)
-            .and_then(|x| x.len().try_into().ok());
+            .and_then(|x| x.mipmaps.len().try_into().ok());
         let caps2 = Some(Self::caps2()).filter(|_| self.subtextures.len() == 6);
         let params = NewD3dParams {
             height: first.height,
@@ -56,14 +56,14 @@ impl Texture<'_> {
         let first = self
             .subtextures
             .get(0)
-            .and_then(|x| x.get(0))
+            .and_then(|x| x.mipmaps.get(0))
             .unwrap_or(&def);
         let format = first.format.to_dxgi();
         let alpha_mode = match first.format {
             DXT1 | DXT1a => AlphaMode::PreMultiplied,
             _ => AlphaMode::Straight,
         };
-        let mipmap_levels = self.subtextures.get(0).map(|x| x.len() as u32);
+        let mipmap_levels = self.subtextures.get(0).map(|x| x.mipmaps.len() as u32);
         let array_layers = self.subtextures.len().try_into().ok().filter(|&x| x > 1);
         let caps2 = Some(Self::caps2()).filter(|_| self.subtextures.len() == 6);
         let is_cubemap = self.subtextures.len() == 6;
@@ -97,7 +97,7 @@ impl Texture<'_> {
             x.data = self
                 .subtextures
                 .iter()
-                .flat_map(|x| x.iter().flat_map(|x| &x.data[..]))
+                .flat_map(|x| x.mipmaps.iter().flat_map(|x| &x.data[..]))
                 .cloned()
                 .collect();
             x

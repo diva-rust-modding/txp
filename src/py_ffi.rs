@@ -15,7 +15,14 @@ pub struct PyTextureAtlas {
 #[derive(Debug, PartialEq, Clone)]
 pub struct PyTexture {
     #[pyo3(get, set)]
-    pub subtextures: Vec<Vec<PyMipmap>>,
+    pub subtextures: Vec<PySubtexture>,
+}
+
+#[pyclass]
+#[derive(Debug, PartialEq, Clone)]
+pub struct PySubtexture {
+    #[pyo3(get, set)]
+    pub mipmaps: Vec<PyMipmap>,
 }
 
 #[pyclass]
@@ -75,24 +82,30 @@ impl<'a> From<TextureAtlas<'a>> for PyTextureAtlas {
 
 impl<'a> From<Texture<'a>> for PyTexture {
     fn from(tex: Texture<'a>) -> Self {
-        let subtextures = tex
-            .subtextures
-            .into_iter()
-            .map(|x| x.into_iter().map(Into::into).collect())
-            .collect();
+        let subtextures = tex.subtextures.into_iter().map(Into::into).collect();
         Self { subtextures }
     }
 }
 impl<'a> From<PyTexture> for Texture<'a> {
     fn from(tex: PyTexture) -> Self {
-        let subtextures = tex
-            .subtextures
-            .into_iter()
-            .map(|x| x.into_iter().map(Into::into).collect())
-            .collect();
+        let subtextures = tex.subtextures.into_iter().map(Into::into).collect();
         Self { subtextures }
     }
 }
+
+impl<'a> From<super::Subtexture<'a>> for PySubtexture {
+    fn from(subtex: super::Subtexture<'a>) -> Self {
+        let mipmaps = subtex.mipmaps.into_iter().map(Into::into).collect();
+        Self { mipmaps }
+    }
+}
+impl<'a> From<PySubtexture> for super::Subtexture<'a> {
+    fn from(subtex: PySubtexture) -> Self {
+        let mipmaps = subtex.mipmaps.into_iter().map(Into::into).collect();
+        Self { mipmaps }
+    }
+}
+
 impl<'a> From<Mipmap<'a>> for PyMipmap {
     fn from(sub: Mipmap<'a>) -> Self {
         let Mipmap {
@@ -160,13 +173,29 @@ impl PyTexture {
         Ok(vec)
     }
     fn __repr__(&self) -> PyResult<String> {
-        let mip = match self.subtextures.get(0).and_then(|x| x.get(0)) {
+        let mip = match self.subtextures.get(0).and_then(|x| x.mipmaps.get(0)) {
             Some(m) => format!(" {:?} {}x{}", m.format, m.width, m.height),
             None => "".to_string(),
         };
         Ok(format!(
             "PyTexture: {} subtexture(s){}",
             self.subtextures.len(),
+            mip
+        ))
+    }
+}
+
+#[pymethods]
+impl PySubtexture {
+    fn __repr__(&self) -> PyResult<String> {
+        let mip = self
+            .mipmaps
+            .get(0)
+            .map(|m| format!(" {:?} {}x{}", m.format, m.width, m.height))
+            .unwrap_or_default();
+        Ok(format!(
+            "Subtexture: {} mipmap(s){}",
+            self.mipmaps.len(),
             mip
         ))
     }

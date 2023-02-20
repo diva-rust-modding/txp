@@ -28,11 +28,11 @@ fn main() -> Result<()> {
     for (i, tex) in atlas.0.iter().enumerate() {
         println!("Texture #{}", i + 1);
         if tex.subtextures.len() == 1 {
-            print_mips(&tex.subtextures[0], "\t")?;
+            print_mips(&tex.subtextures[0].mipmaps, "\t")?;
         } else {
             for (j, subtex) in tex.subtextures.iter().enumerate() {
-                println!("\tSubtexture #{} with {} mips", j + 1, subtex.len());
-                print_mips(&subtex, "\t")?;
+                println!("\tSubtexture #{} with {} mips", j + 1, subtex.mipmaps.len());
+                print_mips(&subtex.mipmaps, "\t")?;
             }
         }
     }

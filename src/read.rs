@@ -42,7 +42,7 @@ impl<'a> Texture<'a> {
         Ok((
             i,
             Self {
-                subtextures: vec![mipmaps],
+                subtextures: vec![Subtexture { mipmaps }],
             },
         ))
     }
@@ -54,7 +54,8 @@ impl<'a> Texture<'a> {
         let depth = (mipdata & 0xFF00) >> 8;
         let mip_count = total_mip_count / depth;
         let (_, subtextures) = count(
-            offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian),
+            offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian)
+                .map(|mipmaps| Subtexture { mipmaps }),
             depth as usize,
         )
         .parse(i)?;
@@ -172,7 +173,7 @@ mod tests {
         let input = &INPUT[TEX_OFF..];
         let (_, tex) = Texture::parse(input).unwrap();
         println!("{:?}", tex);
-        assert_eq!(tex.subtextures[0].len(), 1);
+        assert_eq!(tex.subtextures[0].mipmaps.len(), 1);
     }
 
     #[test]

@@ -19,7 +19,12 @@ pub struct TextureAtlas<'a>(pub Vec<Texture<'a>>);
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Texture<'a> {
-    pub subtextures: Vec<Vec<Mipmap<'a>>>,
+    pub subtextures: Vec<Subtexture<'a>>,
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Subtexture<'a> {
+    pub mipmaps: Vec<Mipmap<'a>>,
 }
 
 #[derive(Debug, Default, PartialEq, Clone)]
@@ -33,7 +38,6 @@ pub struct Mipmap<'a> {
 
 #[non_exhaustive]
 #[derive(Debug, Default, PartialEq, Clone, Copy)]
-#[repr(u32)]
 #[cfg_attr(feature = "pyo3", pyclass)]
 pub enum TextureFormat {
     A8 = 0,
