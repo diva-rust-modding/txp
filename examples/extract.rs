@@ -18,6 +18,8 @@ use std::fs::File;
 use std::io::Read;
 
 fn main() -> Result<()> {
+    tracing_subscriber::fmt::init();
+
     let opt = Opt::from_args();
     let mut file = File::open(&opt.input)?;
     let mut data = vec![];

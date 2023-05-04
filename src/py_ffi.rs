@@ -214,6 +214,8 @@ fn read(path: String) -> PyResult<PyTextureAtlas> {
 
 #[pymodule]
 fn txp(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+    pyo3_log::init();
+
     m.add_wrapped(wrap_pyfunction!(self::read))?;
     m.add_class::<PyTextureAtlas>()?;
     m.add_class::<PyTexture>()?;

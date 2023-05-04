@@ -1,6 +1,7 @@
 #[cfg(feature = "image")]
 use ::image::{Bgr, Bgra, DynamicImage, ImageBuffer, Rgb, Rgba};
 use dcv_color_primitives::*;
+use tracing::{debug, instrument, trace};
 
 use super::*;
 
@@ -32,6 +33,7 @@ impl Subtexture<'_> {
         self.mipmaps.len() == 2 && self.mipmaps.iter().all(|d| d.format == TextureFormat::ATI2)
     }
 
+    #[tracing::instrument(skip(self))]
     pub fn yuv_to_bgra(&self) -> Result<Vec<u8>, ErrorKind> {
         dcv_color_primitives::initialize();
 
@@ -41,9 +43,9 @@ impl Subtexture<'_> {
         let src_sizes: &mut [usize] = &mut [0usize; 2];
         get_buffers_size(ay.width, ay.height, &NV12, None, src_sizes)?;
 
-        println!("{}x{}", ay.width, ay.height);
-        println!("src: {}", ay.data.len());
-        dbg!(&src_sizes);
+        debug!("{}x{}", ay.width, ay.height);
+        debug!("src: {}", ay.data.len());
+        trace!(?src_sizes);
 
         let src_y: Vec<_> = vec![0u8; src_sizes[0]];
         let src_uv: Vec<_> = vec![0u8; src_sizes[1]];
@@ -64,7 +66,7 @@ impl Subtexture<'_> {
 
         let dst_sizes: &mut [usize] = &mut [0usize; 1];
         get_buffers_size(ay.width, ay.height, &BGRA, None, dst_sizes)?;
-        println!("yeet");
+        trace!("yeet");
 
         let mut dst_rgba: Vec<_> = vec![0u8; dst_sizes[0]];
         let dst_buffers: &mut [&mut [u8]] = &mut [&mut dst_rgba[..]];

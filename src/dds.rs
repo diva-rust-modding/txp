@@ -4,6 +4,7 @@ use ddsfile::D3D10ResourceDimension;
 use ddsfile::Dds;
 use ddsfile::NewD3dParams;
 use ddsfile::{D3DFormat, DxgiFormat};
+use tracing::{debug, instrument};
 
 use std::convert::TryInto;
 
@@ -16,6 +17,7 @@ impl Texture<'_> {
         caps.remove(Caps2::VOLUME);
         caps
     }
+    #[tracing::instrument(skip(self))]
     fn d3d(&self) -> Result<Dds, ddsfile::Error> {
         let def = Default::default();
         let first = self
@@ -40,16 +42,10 @@ impl Texture<'_> {
             mipmap_levels,
             caps2,
         };
-        dbg!(
-            first.height,
-            first.width,
-            first.format,
-            format,
-            mipmap_levels,
-            caps2
-        );
+        debug!(first.height, first.width, mipmap_levels, ?caps2);
         Dds::new_d3d(params)
     }
+    #[tracing::instrument(skip(self))]
     fn dxgi(&self) -> Result<Dds, ddsfile::Error> {
         use TextureFormat::*;
         let def = Default::default();
@@ -79,18 +75,18 @@ impl Texture<'_> {
             resource_dimension: D3D10ResourceDimension::Texture2D,
             alpha_mode,
         };
-        dbg!(
+        debug!(
             first.height,
             first.width,
-            format,
             mipmap_levels,
             array_layers,
-            caps2,
+            ?caps2,
             is_cubemap,
-            alpha_mode,
+            ?alpha_mode,
         );
         Dds::new_dxgi(params)
     }
+    #[tracing::instrument(skip(self))]
     pub fn to_dds(&self) -> Result<Dds, ddsfile::Error> {
         let dds = self.d3d().or_else(|_| self.dxgi());
         dds.map(|mut x| {
@@ -106,6 +102,7 @@ impl Texture<'_> {
 }
 
 impl TextureFormat {
+    #[tracing::instrument(level = "trace", ret)]
     pub fn to_d3d_format(&self) -> Option<D3DFormat> {
         use TextureFormat::*;
         match self {
@@ -125,6 +122,7 @@ impl TextureFormat {
         }
     }
 
+    #[tracing::instrument(level = "trace", ret)]
     pub fn to_dxgi_format(&self) -> DxgiFormat {
         use TextureFormat::*;
         match self {

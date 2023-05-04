@@ -10,6 +10,7 @@ use nom::multi::length_data;
 use nom::number::complete::u32;
 use nom::IResult;
 use nom::Parser;
+use tracing::{debug, instrument, trace};
 
 use super::*;
 
@@ -22,10 +23,12 @@ fn parse_magic(id: u8) -> impl Fn(&[u8]) -> IResult<&[u8], nom::number::Endianne
 }
 
 impl<'a> TextureAtlas<'a> {
+    #[tracing::instrument(name = "atlas", skip(i0))]
     pub fn parse(i0: &'a [u8]) -> IResult<&'a [u8], TextureAtlas<'a>> {
         let (i, endian) = parse_magic(3)(i0)?;
         let (i, map_count) = u32(endian)(i)?;
-        let (i, _) = u32(endian)(i)?;
+        let (i, unk) = u32(endian)(i)?;
+        debug!(?endian, map_count, unk);
         let parse = alt((Texture::parse, Texture::parse_array));
         let (_, maps) = offset_table(i0, parse, map_count.try_into().unwrap(), endian).parse(i)?;
         Ok((i, Self(maps)))
@@ -33,10 +36,12 @@ impl<'a> TextureAtlas<'a> {
 }
 
 impl<'a> Texture<'a> {
+    #[tracing::instrument(name = "texture", skip(i0))]
     pub fn parse(i0: &'a [u8]) -> IResult<&'a [u8], Texture<'a>> {
         let (i, endian) = parse_magic(4)(i0)?;
         let (i, mip_count) = u32(endian)(i)?;
-        let (i, _) = u32(endian)(i)?;
+        let (i, unk) = u32(endian)(i)?;
+        debug!(?endian, mip_count, unk);
         let (_, mipmaps) =
             offset_table(i0, Mipmap::parse, mip_count.try_into().unwrap(), endian).parse(i)?;
         Ok((
@@ -46,6 +51,7 @@ impl<'a> Texture<'a> {
             },
         ))
     }
+    #[tracing::instrument(name = "array", skip(i0))]
     pub fn parse_array(i0: &'a [u8]) -> IResult<&'a [u8], Texture<'a>> {
         use nom::multi::count;
         let (i, endian) = parse_magic(5)(i0)?;
@@ -104,6 +110,7 @@ where
 }
 
 impl<'a> Mipmap<'a> {
+    #[tracing::instrument(name = "mip", skip(i))]
     pub fn parse(i: &'a [u8]) -> IResult<&'a [u8], Mipmap<'a>> {
         let (i, endian) = parse_magic(2)(i)?;
         let (i, width) = u32(endian)(i)?;
@@ -112,6 +119,7 @@ impl<'a> Mipmap<'a> {
         let (i, id) = u32(endian)(i)?;
         let (i, data) = length_data(u32(endian))(i)?;
         let data = data.into();
+        trace!(width, height, ?format, id);
         Ok((
             i,
             Self {
@@ -126,6 +134,7 @@ impl<'a> Mipmap<'a> {
 }
 
 impl TextureFormat {
+    #[tracing::instrument(error)]
     pub(crate) fn from_id(id: u32) -> Option<Self> {
         use super::TextureFormat::*;
         match id {
