@@ -25,7 +25,7 @@ impl Texture<'_> {
             .unwrap_or(&def);
         let format = first
             .format
-            .to_d3d()
+            .to_d3d_format()
             .ok_or(ddsfile::Error::UnsupportedFormat)?;
         let mipmap_levels = self
             .subtextures
@@ -58,7 +58,7 @@ impl Texture<'_> {
             .get(0)
             .and_then(|x| x.mipmaps.get(0))
             .unwrap_or(&def);
-        let format = first.format.to_dxgi();
+        let format = first.format.to_dxgi_format();
         let alpha_mode = match first.format {
             DXT1 | DXT1a => AlphaMode::PreMultiplied,
             _ => AlphaMode::Straight,
@@ -106,7 +106,7 @@ impl Texture<'_> {
 }
 
 impl TextureFormat {
-    pub fn to_d3d(&self) -> Option<D3DFormat> {
+    pub fn to_d3d_format(&self) -> Option<D3DFormat> {
         use TextureFormat::*;
         match self {
             A8 => Some(D3DFormat::A8),
@@ -125,7 +125,7 @@ impl TextureFormat {
         }
     }
 
-    pub fn to_dxgi(&self) -> DxgiFormat {
+    pub fn to_dxgi_format(&self) -> DxgiFormat {
         use TextureFormat::*;
         match self {
             A8 => DxgiFormat::A8_UNorm,
