@@ -50,7 +50,7 @@ impl Texture<'_> {
         );
         Dds::new_d3d(params)
     }
-    pub fn dxgi(&self) -> Result<Dds, ddsfile::Error> {
+    fn dxgi(&self) -> Result<Dds, ddsfile::Error> {
         use TextureFormat::*;
         let def = Default::default();
         let first = self
